@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados */
+@layer components {
+  .gold-border {
+    @apply border-2  rounded-lg;
+  }
+}
