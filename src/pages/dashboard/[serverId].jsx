@@ -47,14 +47,12 @@ export const ServerDashboard = () => {
         <Button
           variant={activeTab === 'bets' ? 'primary' : 'ghost'}
           onClick={() => setActiveTab('bets')}
-          className="px-6 py-2 rounded-t-lg rounded-b-none"
         >
           Apuestas Activas
         </Button>
         <Button
           variant={activeTab === 'leaderboard' ? 'primary' : 'ghost'}
           onClick={() => setActiveTab('leaderboard')}
-          className="px-6 py-2 rounded-t-lg rounded-b-none"
         >
           Clasificación
         </Button>
