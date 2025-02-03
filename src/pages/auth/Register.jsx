@@ -18,7 +18,7 @@ export const Register = () => {
             variant="secondary" 
             className="flex items-center gap-2 mx-auto text-lg py-3 px-8 w-full justify-center"
           >
-            <img src="/discord-logo.svg" className="w-6 h-6" alt="Discord" />
+            <img src="src\assets\discord-icon.svg" className="w-6 h-6" alt="Discord" />
             Entrar con Discord
           </Button>
 

@@ -10,6 +10,8 @@ import { ServerDashboard } from './pages/dashboard/[serverId]';
 import { AdminPanel } from './pages/admin/index';
 import { ServerPage } from './pages/ServerPage';
 
+import { Callback } from './pages/auth/Callback';
+
 // Provider
 import { AuthProvider } from './context/AuthContext';
 
@@ -39,6 +41,7 @@ function App() {
           {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/login/callback" element={<Callback />} />
 
           {/* Rutas privadas */}
           <Route
