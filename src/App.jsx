@@ -1,10 +1,11 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate  } from 'react-router-dom';
+import { LoadingSpinner } from './components/core/LoadingSpinner';
 import { useAuth } from './context/AuthContext';
 
 // Pages
 import { Login } from './pages/auth/Login';
-import { Register } from './pages/auth/Register';
+import { AuthCallback } from './pages/auth/Callback';
 import { DashboardIndex } from './pages/dashboard/index';
 import { ServerDashboard } from './pages/dashboard/[serverId]';
 import { AdminPanel } from './pages/admin/index';
@@ -17,9 +18,20 @@ import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/core/Header';
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" />;
-  return children;
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  return user ? children : null;
 };
 
 const AppLayout = ({ children }) => (
@@ -38,7 +50,7 @@ function App() {
         <Routes>
           {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login/callback" element={<AuthCallback />} />
 
           {/* Rutas privadas */}
           <Route
@@ -46,31 +58,18 @@ function App() {
             element={
               <PrivateRoute>
                 <AppLayout>
-                  <DashboardIndex />
+                    <DashboardIndex />
                 </AppLayout>
               </PrivateRoute>
             }
           />
-          <Route
-            path="/server/:serverId"
-            element={
-              <PrivateRoute>
-                <AppLayout>
-                  <ServerDashboard />
-                </AppLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute>
-                <AppLayout>
-                  <AdminPanel />
-                </AppLayout>
-              </PrivateRoute>
-            }
-          />
+          <Route path="/server/:serverId" element={
+            <PrivateRoute>
+              <AppLayout>
+                <ServerPage />
+              </AppLayout>
+            </PrivateRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

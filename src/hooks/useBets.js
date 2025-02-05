@@ -1,5 +1,6 @@
 // src/hooks/useBets.js
 import { useState } from 'react';
+import { onSnapshot } from 'firebase/firestore';
 
 export const useBets = (serverId) => {
   const [bets, setBets] = useState({
@@ -49,6 +50,10 @@ export const useBets = (serverId) => {
     console.log('Nueva apuesta:', prediction, 'para el servidor:', serverId);
   };
 
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    // Actualizar estado
+  });
+  
   return {
     bets,
     isLoading,

@@ -2,6 +2,7 @@
 import React, {useState} from 'react';
 import { useParams } from 'react-router-dom';
 import { useBets } from '../../hooks/useBets';
+import { Header } from '../../components/core/Header'
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { BetForm } from '../../components/features/bets/BetForm';

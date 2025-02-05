@@ -5,6 +5,14 @@
 /* Estilos personalizados */
 @layer components {
   .gold-border {
-    @apply border-2  rounded-lg;
+    @apply border-2 border-gold rounded-xl;
+  }
+  
+  .score-input {
+    @apply w-12 text-center bg-blue-deep text-gold border border-gold rounded;
+  }
+  
+  .team-badge {
+    @apply flex items-center gap-2 bg-black-ebano px-4 py-2 rounded-full border border-gold;
   }
 }
