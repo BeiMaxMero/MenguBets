@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header } from './Header';
+import { Header } from './core/Header';
 import { Toaster } from 'react-hot-toast';
 
 export const Layout = ({ children }) => {
