@@ -8,8 +8,6 @@ import { LoadingSpinner } from '../../components/core/LoadingSpinner';
 export const DashboardIndex = () => {
   const { servers, isLoading, error: serverError } = useServers();
 
-  console.log('Servers received in dashboard:', servers);
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px]">
@@ -25,7 +23,9 @@ export const DashboardIndex = () => {
         <p className="text-red-500">Error: {serverError}</p>
       </Card>
     );
-  }
+  }  
+
+  console.log('Servers received in dashboard:', servers);
 
   return (
     <div className="space-y-8">

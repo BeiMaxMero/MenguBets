@@ -10,6 +10,39 @@ export const UserBetHistory = ({ userId }) => {
   const ITEMS_PER_PAGE = 3;
   const MAX_VISIBLE_PAGES = 3;
 
+  // Resetear la página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [groupId, timeRange, selectedSeason, selectedCompetition]);
+  
+  // Filtrar las apuestas basado en todos los criterios
+  const filterBets = (bets) => {
+    return bets.filter(bet => {
+      const matchesGroup = !groupId || bet.groupId === groupId;
+      const matchesTimeRange = timeRange === 'all' || isWithinTimeRange(bet.date, timeRange);
+      const matchesSeason = selectedSeason === 'all' || bet.season === selectedSeason;
+      const matchesCompetition = selectedCompetition === 'all' || bet.competition === selectedCompetition;
+      
+      return matchesGroup && matchesTimeRange && matchesSeason && matchesCompetition;
+    });
+  };
+
+  const isWithinTimeRange = (date, range) => {
+    const betDate = new Date(date);
+    const now = new Date();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    const oneMonth = 30 * 24 * 60 * 60 * 1000;
+
+    switch(range) {
+      case 'week':
+        return (now - betDate) <= oneWeek;
+      case 'month':
+        return (now - betDate) <= oneMonth;
+      default:
+        return true;
+    }
+  };
+  
   // Datos de ejemplo
   const seasons = [
     { id: '2024', name: 'Temporada 2024' },

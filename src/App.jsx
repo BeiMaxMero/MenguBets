@@ -13,6 +13,7 @@ import { AdminPanel } from './pages/admin/index';
 import { ServerPage } from './pages/ServerPage';
 import { ServerAdminPanel } from './pages/server/ServerAdminPanel';
 import { NotFound } from './pages/NotFound';
+import { ServerLayout } from './pages/server/layout/ServerLayout';
 
 // Provider
 import { AuthProvider } from './context/AuthContext';
@@ -82,7 +83,7 @@ function App() {
             path="/server/:serverId"
             element={
               <PrivateRoute>
-                <ServerPage />
+                <ServerLayout />  {/* Cambiado de ServerPage a ServerLayout */}
               </PrivateRoute>
             }
           />

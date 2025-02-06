@@ -1,11 +1,19 @@
 // src/components/features/leaderboard/LeaderboardCard.jsx
 import React, { useState } from 'react';
 import { Card } from '../../ui/Card';
+import { Button } from '../../ui/Button';
 import { Modal } from '../../ui/Modal';
-import { UserBetHistory } from './UserBetHistory'; // Añadir esta importación
+import { UserBetHistory } from './UserBetHistory';
 
-export const LeaderboardCard = ({ users }) => {
+export const LeaderboardCard = ({ users, groupId }) => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [timeRange, setTimeRange] = useState('all'); // 'all', 'month', 'week'
+
+  const timeRanges = [
+    { id: 'all', label: 'Todo' },
+    { id: 'month', label: 'Este Mes' },
+    { id: 'week', label: 'Esta Semana' }
+  ];
 
   const getPositionStyle = (position) => {
     switch(position) {
@@ -19,7 +27,26 @@ export const LeaderboardCard = ({ users }) => {
   return (
     <>
       <Card>
-        <h3 className="text-2xl font-bold text-gold mb-6">Clasificación 🏆</h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gold">
+            Clasificación 🏆
+            {groupId && ` - ${groupId}`}
+          </h3>
+          
+          {/* Filtros temporales */}
+          <div className="flex gap-2">
+            {timeRanges.map(range => (
+              <Button
+                key={range.id}
+                variant={timeRange === range.id ? "primary" : "ghost"}
+                onClick={() => setTimeRange(range.id)}
+                className={`text-sm ${timeRange === range.id ? "text-black-ebano" : "text-gold"}`}
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
+        </div>
         
         <div className="space-y-4">
           {users.map((user, index) => (
@@ -42,17 +69,30 @@ export const LeaderboardCard = ({ users }) => {
                 />
                 <div>
                   <p className="text-white font-medium">{user.name}</p>
-                  <p className="text-sm text-gray-400">Racha: {user.streak.length} 🔥</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-400">
+                      Racha: {user.streak.length} 🔥
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Win Rate: {user.winRate || 0}%
+                    </p>
+                  </div>
                 </div>
               </div>
               
-              {/* Puntos */}
+              {/* Estadísticas */}
               <div className="text-right">
                 <p className="text-gold font-bold text-xl">{user.points}</p>
                 <p className="text-sm text-gray-400">puntos</p>
               </div>
             </div>
           ))}
+
+          {users.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gold">No hay datos disponibles para mostrar</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -62,7 +102,11 @@ export const LeaderboardCard = ({ users }) => {
         onClose={() => setSelectedUser(null)}
         title={`Historial de ${selectedUser?.name}`}
       >
-        <UserBetHistory userId={selectedUser?.id} />
+        <UserBetHistory 
+          userId={selectedUser?.id} 
+          groupId={groupId}
+          timeRange={timeRange}
+        />
       </Modal>
     </>
   );
