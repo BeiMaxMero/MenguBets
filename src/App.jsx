@@ -1,5 +1,5 @@
-// src/App.jsx
-import React, { useEffect } from 'react';
+// src/App.jsx con useEffect importado correctamente
+import React, { useEffect } from 'react'; // Añadido useEffect aquí
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from './components/core/LoadingSpinner';
 import { Layout } from './components/Layout';
@@ -7,6 +7,7 @@ import { useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/core/ErrorBoundary';
 import { NotificationsManager } from './components/core/NotificationsManager';
 import { AppStoreProvider } from './context/AppStore';
+import { BetProvider } from './context/BetContext'; 
 
 // Pages
 import { Login } from './pages/auth/Login';
@@ -81,96 +82,98 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <AppStoreProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Rutas públicas */}
-              <Route 
-                path="/login" 
-                element={
-                  <PublicOnlyRoute>
-                    <Login />
-                  </PublicOnlyRoute>
-                } 
-              />
-              <Route 
-                path="/login/callback" 
-                element={
-                  <AuthCallback />
-                } 
-              />
+          <BetProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Rutas públicas */}
+                <Route 
+                  path="/login" 
+                  element={
+                    <PublicOnlyRoute>
+                      <Login />
+                    </PublicOnlyRoute>
+                  } 
+                />
+                <Route 
+                  path="/login/callback" 
+                  element={
+                    <AuthCallback />
+                  } 
+                />
 
-              {/* Rutas privadas */}
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <DashboardIndex />
-                  </PrivateRoute>
-                }
-              />
+                {/* Rutas privadas */}
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <DashboardIndex />
+                    </PrivateRoute>
+                  }
+                />
 
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <UserProfile />
-                  </PrivateRoute>
-                }
-              />
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute>
+                      <UserProfile />
+                    </PrivateRoute>
+                  }
+                />
 
-              <Route
-                path="/search"
-                element={
-                  <PrivateRoute>
-                    <BetSearch />
-                  </PrivateRoute>
-                }
-              />
+                <Route
+                  path="/search"
+                  element={
+                    <PrivateRoute>
+                      <BetSearch />
+                    </PrivateRoute>
+                  }
+                />
 
-              {/* Rutas de servidor */}
-              <Route
-                path="/server/:serverId"
-                element={
-                  <PrivateRoute>
-                    <ServerLayout />
-                  </PrivateRoute>
-                }
-              />
+                {/* Rutas de servidor */}
+                <Route
+                  path="/server/:serverId"
+                  element={
+                    <PrivateRoute>
+                      <ServerLayout />
+                    </PrivateRoute>
+                  }
+                />
 
-              {/* Rutas de administración de servidor */}
-              <Route
-                path="/server/:serverId/admin"
-                element={
-                  <PrivateRoute>
-                    <ServerAdminPanel />
-                  </PrivateRoute>
-                }
-              />
+                {/* Rutas de administración de servidor */}
+                <Route
+                  path="/server/:serverId/admin"
+                  element={
+                    <PrivateRoute>
+                      <ServerAdminPanel />
+                    </PrivateRoute>
+                  }
+                />
+                
+                {/* Panel de Administración General (solo para admins globales) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <PrivateRoute>
+                      <AdminPanel />
+                    </PrivateRoute>
+                  }
+                />
+
+                {/* Ruta 404 */}
+                <Route
+                  path="*"
+                  element={
+                    <PrivateRoute>
+                      <NotFound />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
               
-              {/* Panel de Administración General (solo para admins globales) */}
-              <Route
-                path="/admin"
-                element={
-                  <PrivateRoute>
-                    <AdminPanel />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Ruta 404 */}
-              <Route
-                path="*"
-                element={
-                  <PrivateRoute>
-                    <NotFound />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-            
-            {/* Gestor de notificaciones global */}
-            <NotificationsManager />
-          </BrowserRouter>
+              {/* Gestor de notificaciones global */}
+              <NotificationsManager />
+            </BrowserRouter>
+          </BetProvider>
         </AppStoreProvider>
       </AuthProvider>
     </ErrorBoundary>
