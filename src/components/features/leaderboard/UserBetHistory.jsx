@@ -1,12 +1,14 @@
 // src/components/features/leaderboard/UserBetHistory.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 
-export const UserBetHistory = ({ userId }) => {
+export const UserBetHistory = ({ userId, groupId, timeRange }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSeason, setSelectedSeason] = useState('all');
   const [selectedCompetition, setSelectedCompetition] = useState('all');
+  const [filteredBets, setFilteredBets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const ITEMS_PER_PAGE = 3;
   const MAX_VISIBLE_PAGES = 3;
 
@@ -16,16 +18,24 @@ export const UserBetHistory = ({ userId }) => {
   }, [groupId, timeRange, selectedSeason, selectedCompetition]);
   
   // Filtrar las apuestas basado en todos los criterios
-  const filterBets = (bets) => {
-    return bets.filter(bet => {
-      const matchesGroup = !groupId || bet.groupId === groupId;
-      const matchesTimeRange = timeRange === 'all' || isWithinTimeRange(bet.date, timeRange);
-      const matchesSeason = selectedSeason === 'all' || bet.season === selectedSeason;
-      const matchesCompetition = selectedCompetition === 'all' || bet.competition === selectedCompetition;
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulación de llamada a API
+    setTimeout(() => {
+      const filtered = allBets.filter(bet => {
+        const matchesGroup = !groupId || bet.groupId === groupId;
+        const matchesTimeRange = timeRange === 'all' || isWithinTimeRange(bet.date, timeRange);
+        const matchesSeason = selectedSeason === 'all' || bet.season === selectedSeason;
+        const matchesCompetition = selectedCompetition === 'all' || bet.competition === selectedCompetition;
+        
+        return matchesGroup && matchesTimeRange && matchesSeason && matchesCompetition;
+      });
       
-      return matchesGroup && matchesTimeRange && matchesSeason && matchesCompetition;
-    });
-  };
+      setFilteredBets(filtered);
+      setIsLoading(false);
+    }, 500);
+  }, [groupId, timeRange, selectedSeason, selectedCompetition, userId]);
 
   const isWithinTimeRange = (date, range) => {
     const betDate = new Date(date);
@@ -61,6 +71,7 @@ export const UserBetHistory = ({ userId }) => {
     date: '2024-02-15',
     season: index < 10 ? '2024' : '2023',
     competition: index % 3 === 0 ? 'laliga' : index % 3 === 1 ? 'champions' : 'copa',
+    groupId: index % 2 === 0 ? 'laliga' : 'champions',
     match: {
       homeTeam: 'Real Madrid',
       awayTeam: 'Barcelona',
@@ -70,12 +81,6 @@ export const UserBetHistory = ({ userId }) => {
     points: index % 2 === 0 ? 3 : 0,
     status: index % 2 === 0 ? 'won' : 'lost'
   }));
-
-  // Filtrar por temporada y competición
-  const filteredBets = allBets.filter(bet => 
-    (selectedSeason === 'all' || bet.season === selectedSeason) &&
-    (selectedCompetition === 'all' || bet.competition === selectedCompetition)
-  );
 
   // Calcular páginas
   const totalPages = Math.ceil(filteredBets.length / ITEMS_PER_PAGE);
@@ -89,13 +94,13 @@ export const UserBetHistory = ({ userId }) => {
     totalBets: filteredBets.length,
     wins: filteredBets.filter(bet => bet.status === 'won').length,
     totalPoints: filteredBets.reduce((acc, bet) => acc + bet.points, 0),
-    accuracy: Math.round((filteredBets.filter(bet => bet.status === 'won').length / filteredBets.length) * 100)
+    accuracy: filteredBets.length > 0 
+      ? Math.round((filteredBets.filter(bet => bet.status === 'won').length / filteredBets.length) * 100) 
+      : 0
   };
 
   // Función para generar el array de páginas a mostrar
   const getPageNumbers = () => {
-    const totalPages = Math.ceil(filteredBets.length / ITEMS_PER_PAGE);
-    
     if (totalPages <= MAX_VISIBLE_PAGES) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
@@ -188,104 +193,117 @@ export const UserBetHistory = ({ userId }) => {
         </Card>
       </div>
 
-      {/* Lista de apuestas paginada */}
-      <div className="space-y-4">
-        {paginatedBets.map(bet => (
-          <Card key={bet.id} className={`border-2 ${
-            bet.status === 'won' ? 'border-green-500' : 'border-red-500'
-          }`}>
-            <div className="flex flex-col md:flex-row justify-between">
-              <div>
-                <p className="text-white font-medium">
-                  {bet.match.homeTeam} vs {bet.match.awayTeam}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {new Date(bet.date).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="text-right mt-2 md:mt-0">
-                <p className="text-gold font-bold">
-                  Predicción: {bet.prediction}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Resultado: {bet.match.result}
-                </p>
-              </div>
-            </div>
-            <div className="mt-2 flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div className="space-x-2">
-                <span className={`text-sm ${
-                  bet.status === 'won' ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {bet.status === 'won' ? '✓ Acertada' : '✗ Fallada'}
-                </span>
-                <span className="text-gold">+{bet.points} pts</span>
-              </div>
-              <span className="text-sm text-gray-400 mt-1 md:mt-0">
-                {competitions.find(c => c.id === bet.competition)?.name}
-              </span>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-
-      {/* Paginación Mejorada */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-1">
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-          >
-            «
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            ‹
-          </Button>
-
-          <div className="flex items-center gap-1">
-            {getPageNumbers().map((page, index) => (
-              page === '...' ? (
-                <span key={`ellipsis-${index}`} className="text-gold px-2">
-                  {page}
-                </span>
-              ) : (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "primary" : "ghost"}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 p-0 text-sm transition-all ${
-                    currentPage === page 
-                      ? 'bg-gold text-black-ebano' 
-                      : 'text-gold hover:bg-blue-deep'
-                  }`}
-                >
-                  {page}
-                </Button>
-              )
-            ))}
-          </div>
-
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-          >
-            ›
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-          >
-            »
-          </Button>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gold border-t-transparent"></div>
         </div>
+      ) : (
+        <>
+          {/* Lista de apuestas paginada */}
+          {paginatedBets.length > 0 ? (
+            <div className="space-y-4">
+              {paginatedBets.map(bet => (
+                <Card key={bet.id} className={`border-2 ${
+                  bet.status === 'won' ? 'border-green-500' : 'border-red-500'
+                }`}>
+                  <div className="flex flex-col md:flex-row justify-between">
+                    <div>
+                      <p className="text-white font-medium">
+                        {bet.match.homeTeam} vs {bet.match.awayTeam}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {new Date(bet.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right mt-2 md:mt-0">
+                      <p className="text-gold font-bold">
+                        Predicción: {bet.prediction}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Resultado: {bet.match.result}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div className="space-x-2">
+                      <span className={`text-sm ${
+                        bet.status === 'won' ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {bet.status === 'won' ? '✓ Acertada' : '✗ Fallada'}
+                      </span>
+                      <span className="text-gold">+{bet.points} pts</span>
+                    </div>
+                    <span className="text-sm text-gray-400 mt-1 md:mt-0">
+                      {competitions.find(c => c.id === bet.competition)?.name}
+                    </span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="text-center py-6">
+              <p className="text-gold">No hay apuestas que coincidan con los filtros seleccionados</p>
+            </Card>
+          )}
+
+          {/* Paginación Mejorada */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-1">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                «
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                ‹
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="text-gold px-2">
+                      {page}
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "primary" : "ghost"}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 p-0 text-sm transition-all ${
+                        currentPage === page 
+                          ? 'bg-gold text-black-ebano' 
+                          : 'text-gold hover:bg-blue-deep'
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  )
+                ))}
+              </div>
+
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                ›
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                »
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
