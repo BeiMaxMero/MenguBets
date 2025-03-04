@@ -1,90 +1,99 @@
-// hooks/useServers.js
+// src/hooks/useServers.js - Optimized version
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getUserServers } from '../services/discord';
-
-// Cache para almacenar los datos de los servidores
-const serversCache = {
-  data: null,
-  timestamp: null,
-  CACHE_DURATION: 5 * 60 * 1000, // 5 minutos en milisegundos
-};
+import { getUserServers, getMockServers } from '../services/discord';
 
 export const useServers = () => {
   const [servers, setServers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  
+  // Use refs to prevent multiple in-flight requests and maintain last fetch time
   const fetchInProgress = useRef(false);
-
-  // Comprobación de si el caché es válido
-  const isCacheValid = useCallback(() => {
-    return (
-      serversCache.data &&
-      serversCache.timestamp &&
-      Date.now() - serversCache.timestamp < serversCache.CACHE_DURATION
-    );
-  }, []);
-
-  // Función para obtener los servidores
-  const fetchServers = useCallback(async () => {
-    // Si ya hay una petición en curso, no hacer otra
-    if (fetchInProgress.current) return;
-
-    // Si el caché es válido, usar esos datos
-    if (isCacheValid()) {
-      setServers(serversCache.data);
-      setIsLoading(false);
+  const lastFetchTime = useRef(0);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  
+  // Memoized fetch function to prevent unnecessary renders
+  const fetchServers = useCallback(async (ignoreCache = false) => {
+    // Prevent multiple concurrent calls
+    if (fetchInProgress.current) {
+      console.log('Fetch already in progress, skipping duplicate call');
       return;
     }
-
+    
+    // Check if cache is still valid
+    const timeElapsed = Date.now() - lastFetchTime.current;
+    if (!ignoreCache && timeElapsed < CACHE_DURATION && servers.length > 0) {
+      console.log('Using cached servers data');
+      return;
+    }
+    
+    // Update state for fetching
+    fetchInProgress.current = true;
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      fetchInProgress.current = true;
-      setIsLoading(true);
-      setError(null);
-
-      const serverList = await getUserServers(user.accessToken);
-
-      // Actualizar el caché
-      serversCache.data = serverList;
-      serversCache.timestamp = Date.now();
-
+      let serverList;
+      
+      // Use mock data in development if needed
+      if (process.env.NODE_ENV === 'development' && !user?.accessToken) {
+        console.log('Using mock server data in development');
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        serverList = getMockServers();
+      } else {
+        // Fetch real data
+        serverList = await getUserServers(user.accessToken);
+      }
+      
+      // Update state with fetched data
       setServers(serverList);
-    } catch (err) {
-      setError(err.message);
-      setServers([]);
+      lastFetchTime.current = Date.now();
+    } catch (error) {
+      console.error('Error fetching servers:', error);
+      setError(error.message || 'Error al cargar servidores');
+      
+      // If in development, fallback to mock data on error
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Falling back to mock data after error');
+        setServers(getMockServers());
+        lastFetchTime.current = Date.now();
+      }
     } finally {
       setIsLoading(false);
       fetchInProgress.current = false;
     }
-  }, [user?.accessToken, isCacheValid]);
-
-  // useEffect para obtener los servidores cuando el token de acceso esté disponible
+  }, [user, servers.length]);
+  
+  // Effect for initial data loading and cleanup
   useEffect(() => {
-    if (user?.accessToken) {
+    // Only fetch if user has token and we haven't fetched data yet or the cache expired
+    if (user?.accessToken && (servers.length === 0 || Date.now() - lastFetchTime.current > CACHE_DURATION)) {
       fetchServers();
-    } else {
+    } else if (!user?.accessToken) {
       setServers([]);
       setIsLoading(false);
     }
-
+    
     // Cleanup function
     return () => {
       fetchInProgress.current = false;
     };
-  }, [user?.accessToken, fetchServers]);
-
-  // Función para forzar una recarga ignorando la caché
+  }, [user?.accessToken, fetchServers, servers.length]);
+  
+  // Function to force reload
   const refreshServers = useCallback(() => {
-    serversCache.data = null;
-    serversCache.timestamp = null;
-    return fetchServers();
+    return fetchServers(true);
   }, [fetchServers]);
-
+  
   return {
     servers,
     isLoading,
     error,
-    refreshServers, // Exponer la función de recarga por si es necesaria
+    refreshServers
   };
 };
+
+export default useServers;
